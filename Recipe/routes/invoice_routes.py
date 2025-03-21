@@ -16,6 +16,8 @@ def upload_invoice():
     if file and file.filename.endswith('.pdf'):
         file_data = file.read()
         result = process_invoice_pdf(file_data)
+        if 'error' in result:
+            return jsonify(result), 400
         return jsonify(result)
 
     return jsonify({"error": "Invalid file format"}), 400
