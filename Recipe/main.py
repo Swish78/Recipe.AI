@@ -6,11 +6,10 @@ from routes.recipe_routes import recipe_bp
 from database import JSONEncoder
 
 app = Flask(__name__)
-CORS(app)
+CORS(app , resources={r"/*": {"origins": "*", "allow_headers": "*", "expose_headers": "*", "allow_methods": "*"}})
 
 app.json_encoder = JSONEncoder
 
-# Register blueprints
 app.register_blueprint(invoice_bp, url_prefix='/api')
 app.register_blueprint(ingredient_bp, url_prefix='/api')
 app.register_blueprint(recipe_bp, url_prefix='/api')
