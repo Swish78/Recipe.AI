@@ -8,6 +8,7 @@ import {
     List,
     ListItem,
     ListItemText,
+    ListItemSecondaryAction,
     Divider,
     Button,
     TextField,
@@ -24,13 +25,16 @@ import {
 import {
     Add as AddIcon,
     Search as SearchIcon,
-    Clear as ClearIcon
+    Clear as ClearIcon,
+    Delete as DeleteIcon
 } from '@mui/icons-material';
 import axios from 'axios';
 
 const Ingredients = ({ showNotification, setLoading }) => {
     const [ingredients, setIngredients] = useState([]);
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [selectedIngredient, setSelectedIngredient] = useState(null);
     const [searchText, setSearchText] = useState('');
     const [newIngredient, setNewIngredient] = useState({
         name: '',
@@ -63,6 +67,28 @@ const Ingredients = ({ showNotification, setLoading }) => {
             ...newIngredient,
             [name]: type === 'checkbox' ? checked : value
         });
+    };
+
+    const handleDeleteIngredient = async () => {
+        if (!selectedIngredient) return;
+        
+        setLoading(true);
+        try {
+            const response = await axios.delete(`${API_URL}/delete-ingredient/${selectedIngredient._id}`);
+            if (response.data.success) {
+                showNotification('Ingredient deleted successfully', 'success');
+                fetchIngredients();
+            } else {
+                showNotification('Failed to delete ingredient', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting ingredient:', error);
+            showNotification('Failed to delete ingredient', 'error');
+        } finally {
+            setLoading(false);
+            setDeleteDialogOpen(false);
+            setSelectedIngredient(null);
+        }
     };
 
     const handleAddIngredient = async () => {
@@ -163,6 +189,18 @@ const Ingredients = ({ showNotification, setLoading }) => {
                                                         primary={item.name}
                                                         secondary={`Quantity: ${item.quantity} • Added: ${new Date(item.itemAdded).toLocaleDateString()}`}
                                                     />
+                                                    <ListItemSecondaryAction>
+                                                        <IconButton
+                                                            edge="end"
+                                                            aria-label="delete"
+                                                            onClick={() => {
+                                                                setSelectedIngredient(item);
+                                                                setDeleteDialogOpen(true);
+                                                            }}
+                                                        >
+                                                            <DeleteIcon />
+                                                        </IconButton>
+                                                    </ListItemSecondaryAction>
                                                 </ListItem>
                                                 {index < groupedIngredients.vegetablesFruits.length - 1 && <Divider />}
                                             </div>
@@ -201,6 +239,18 @@ const Ingredients = ({ showNotification, setLoading }) => {
                                                         primary={item.name}
                                                         secondary={`Quantity: ${item.quantity} • Added: ${new Date(item.itemAdded).toLocaleDateString()}`}
                                                     />
+                                                    <ListItemSecondaryAction>
+                                                        <IconButton
+                                                            edge="end"
+                                                            aria-label="delete"
+                                                            onClick={() => {
+                                                                setSelectedIngredient(item);
+                                                                setDeleteDialogOpen(true);
+                                                            }}
+                                                        >
+                                                            <DeleteIcon />
+                                                        </IconButton>
+                                                    </ListItemSecondaryAction>
                                                 </ListItem>
                                                 {index < groupedIngredients.other.length - 1 && <Divider />}
                                             </div>
@@ -261,6 +311,40 @@ const Ingredients = ({ showNotification, setLoading }) => {
                     </Button>
                     <Button onClick={handleAddIngredient} color="primary" variant="contained">
                         Add Ingredient
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={() => {
+                    setDeleteDialogOpen(false);
+                    setSelectedIngredient(null);
+                }}
+            >
+                <DialogTitle>Delete Ingredient</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to delete {selectedIngredient?.name}?
+                        This action cannot be undone.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        onClick={() => {
+                            setDeleteDialogOpen(false);
+                            setSelectedIngredient(null);
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleDeleteIngredient}
+                        color="error"
+                        variant="contained"
+                    >
+                        Delete
                     </Button>
                 </DialogActions>
             </Dialog>
