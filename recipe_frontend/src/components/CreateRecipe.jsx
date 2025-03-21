@@ -17,7 +17,9 @@ import {
     IconButton,
     Divider,
     Paper,
-    Chip
+    Chip,
+    FormControlLabel,
+    Checkbox
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -26,21 +28,17 @@ import {
 import axios from 'axios';
 
 const CreateRecipe = ({ showNotification, setLoading }) => {
-    const [recipeType, setRecipeType] = useState(1);
     const [customRecipe, setCustomRecipe] = useState({
         name: '',
         ingredients: [],
         instructions: '',
-        description: ''
+        is_veg: true,
+        is_fav: false
     });
     const [newIngredient, setNewIngredient] = useState('');
-    const [generatedRecipe, setGeneratedRecipe] = useState(null);
 
     const API_URL = 'http://localhost:8000/api';
 
-    const handleTypeChange = (e) => {
-        setRecipeType(e.target.value);
-    };
 
     const handleCustomRecipeChange = (e) => {
         const { name, value } = e.target;
@@ -69,22 +67,6 @@ const CreateRecipe = ({ showNotification, setLoading }) => {
         });
     };
 
-    const generateRecipe = async () => {
-        setLoading(true);
-        try {
-            const response = await axios.post(`${API_URL}/get-recipe`, {
-                type: recipeType
-            });
-            setGeneratedRecipe(response.data);
-            showNotification('Recipe generated successfully!', 'success');
-        } catch (error) {
-            console.error('Error generating recipe:', error);
-            showNotification('Failed to generate recipe. Please try again.', 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const saveCustomRecipe = async () => {
         if (!customRecipe.name.trim()) {
             showNotification('Please enter a recipe name', 'warning');
@@ -104,10 +86,17 @@ const CreateRecipe = ({ showNotification, setLoading }) => {
         setLoading(true);
         try {
             const recipeData = {
-                ...customRecipe,
+                name: customRecipe.name,
+                items: customRecipe.ingredients,
+                instructions: customRecipe.instructions.split('\n').filter(line => line.trim() !== ''),
                 is_recipe: true,
-                is_fav: true
+                is_veg: customRecipe.is_veg,
+                is_fav: customRecipe.is_fav
             };
+
+            if (!recipeData.name || recipeData.items.length === 0 || recipeData.instructions.length === 0) {
+                throw new Error('Please fill in all required fields (name, ingredients, and instructions)');
+            }
 
             await axios.post(`${API_URL}/save-recipe`, recipeData);
             showNotification('Recipe saved successfully!', 'success');
@@ -117,26 +106,9 @@ const CreateRecipe = ({ showNotification, setLoading }) => {
                 name: '',
                 ingredients: [],
                 instructions: '',
-                description: ''
+                is_veg: true,
+                is_fav: false
             });
-        } catch (error) {
-            console.error('Error saving recipe:', error);
-            showNotification('Failed to save recipe', 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const saveGeneratedRecipe = async () => {
-        if (!generatedRecipe) return;
-
-        setLoading(true);
-        try {
-            await axios.post(`${API_URL}/save-recipe`, {
-                ...generatedRecipe,
-                is_fav: true
-            });
-            showNotification('Recipe saved to favorites!', 'success');
         } catch (error) {
             console.error('Error saving recipe:', error);
             showNotification('Failed to save recipe', 'error');
@@ -152,79 +124,8 @@ const CreateRecipe = ({ showNotification, setLoading }) => {
             </Typography>
 
             <Grid container spacing={3}>
-                {/* AI Recipe Generation */}
-                <Grid item xs={12} md={6}>
-                    <Card sx={{ height: '100%' }}>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                                Generate Recipe with AI
-                            </Typography>
-                            <Divider sx={{ mb: 3 }} />
-
-                            <FormControl fullWidth sx={{ mb: 3 }}>
-                                <InputLabel id="recipe-type-label">Recipe Type</InputLabel>
-                                <Select
-                                    labelId="recipe-type-label"
-                                    id="recipe-type"
-                                    value={recipeType}
-                                    label="Recipe Type"
-                                    onChange={handleTypeChange}
-                                >
-                                    <MenuItem value={1}>Use Available Ingredients</MenuItem>
-                                    <MenuItem value={2}>Optimize for Expiring Ingredients</MenuItem>
-                                    <MenuItem value={3}>Surprise Me</MenuItem>
-                                </Select>
-                            </FormControl>
-
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                fullWidth
-                                onClick={generateRecipe}
-                            >
-                                Generate Recipe
-                            </Button>
-
-                            {generatedRecipe && (
-                                <Box mt={3}>
-                                    <Paper variant="outlined" sx={{ p: 2 }}>
-                                        <Typography variant="h6" color="primary">{generatedRecipe.name}</Typography>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
-                                            {generatedRecipe.description}
-                                        </Typography>
-
-                                        <Typography variant="subtitle2" sx={{ mt: 2, fontWeight: 'bold' }}>Ingredients:</Typography>
-                                        <List dense>
-                                            {generatedRecipe.ingredients.map((ingredient, index) => (
-                                                <ListItem key={index} dense>
-                                                    <ListItemText primary={ingredient} />
-                                                </ListItem>
-                                            ))}
-                                        </List>
-
-                                        <Typography variant="subtitle2" sx={{ mt: 2, fontWeight: 'bold' }}>Instructions:</Typography>
-                                        <Typography variant="body2" sx={{ mt: 1, whiteSpace: 'pre-line' }}>
-                                            {generatedRecipe.instructions}
-                                        </Typography>
-
-                                        <Box mt={2} display="flex" justifyContent="flex-end">
-                                            <Button
-                                                variant="contained"
-                                                color="secondary"
-                                                onClick={saveGeneratedRecipe}
-                                            >
-                                                Save to Favorites
-                                            </Button>
-                                        </Box>
-                                    </Paper>
-                                </Box>
-                            )}
-                        </CardContent>
-                    </Card>
-                </Grid>
-
                 {/* Custom Recipe Creation */}
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12}>
                     <Card sx={{ height: '100%' }}>
                         <CardContent>
                             <Typography variant="h6" gutterBottom>
@@ -241,15 +142,16 @@ const CreateRecipe = ({ showNotification, setLoading }) => {
                                 margin="normal"
                             />
 
-                            <TextField
-                                fullWidth
-                                label="Description (Optional)"
-                                name="description"
-                                value={customRecipe.description}
-                                onChange={handleCustomRecipeChange}
-                                margin="normal"
-                                multiline
-                                rows={2}
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={customRecipe.is_veg}
+                                        onChange={(e) => setCustomRecipe(prev => ({ ...prev, is_veg: e.target.checked }))}
+                                        name="is_veg"
+                                    />
+                                }
+                                label="Vegetarian Recipe"
+                                sx={{ mb: 2 }}
                             />
 
                             <Box mt={2} mb={2}>
