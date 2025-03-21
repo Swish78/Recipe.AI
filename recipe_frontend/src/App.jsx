@@ -26,15 +26,13 @@ import {
     Kitchen as KitchenIcon,
     Restaurant as RestaurantIcon,
     Receipt as ReceiptIcon,
-    Dashboard as DashboardIcon,
-    Favorite as FavoriteIcon
+    Dashboard as DashboardIcon
 } from '@mui/icons-material';
 import Dashboard from './components/Dashboard';
 import Ingredients from './components/Ingredients';
 import Recipes from './components/Recipes';
 import CreateRecipe from './components/CreateRecipe';
 import UploadInvoice from './components/UploadInvoice';
-import FavoriteRecipes from './components/FavoriteRecipes';
 
 const App = () => {
     const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
@@ -128,8 +126,6 @@ const App = () => {
                 return <CreateRecipe showNotification={showNotification} setLoading={setLoading} />;
             case 'uploadInvoice':
                 return <UploadInvoice showNotification={showNotification} setLoading={setLoading} />;
-            case 'favorites':
-                return <FavoriteRecipes showNotification={showNotification} setLoading={setLoading} />;
             default:
                 return <Dashboard showNotification={showNotification} setLoading={setLoading} />;
         }
@@ -141,7 +137,6 @@ const App = () => {
         { text: 'Recipes', icon: <RestaurantIcon />, page: 'recipes' },
         { text: 'Create Recipe', icon: <RestaurantIcon />, page: 'createRecipe' },
         { text: 'Upload Invoice', icon: <ReceiptIcon />, page: 'uploadInvoice' },
-        { text: 'Favorite Recipes', icon: <FavoriteIcon />, page: 'favorites' },
     ];
 
     return (
