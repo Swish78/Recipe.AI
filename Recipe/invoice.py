@@ -20,8 +20,16 @@ def process_invoice_pdf(file_data):
 
         extractor = Agent(
             role="Food Invoice Data Extractor",
-            goal="Extract only food-related items such as product title/names/descriptions, and quantities/qty from invoices with 100% accuracy.",
-            backstory="An AI expert in parsing invoices and identifying food-related items exclusively. It filters out non-food products and focuses on extracting structured information accurately.",
+            goal="""Extract only food-related items (product titles/names/descriptions) and quantities from invoices with 100% accuracy, ensuring consistency and removing brand-specific information.
+
+Instructions:
+
+Extract only food-related items while filtering out non-food products.
+Generalize item names by removing brand names and ensuring uniformity.
+If the same product appears with different descriptions (e.g., Kashmir Apple vs. Apple), standardize it to the most general form (Apple).
+Avoid duplicate entries due to slight naming variations (e.g., Chips Lay's India's Magic Masala and Lay's India's Magic Masala Potato Chips should both be recognized as Magic Masala Chips).
+Ensure structured and accurate extraction with no irrelevant data.""",
+            backstory="An AI expert in parsing invoices with a specialized focus on food-related items. It intelligently identifies and standardizes item names while maintaining data integrity.",
             verbose=False,
             llm=llm
         )
@@ -62,7 +70,7 @@ def process_invoice_pdf(file_data):
         initial_result = extract_crew.kickoff()
 
         try:
-            extracted_items = initial_result.final_output
+            extracted_items = initial_result.raw
 
             if isinstance(extracted_items, str):
                 extracted_items = json.loads(extracted_items)
@@ -94,7 +102,7 @@ def process_invoice_pdf(file_data):
             )
 
             classification_result = classification_crew.kickoff()
-            final_data = classification_result.final_output
+            final_data = classification_result.raw
 
             if isinstance(final_data, str):
                 final_data = json.loads(final_data)
@@ -108,7 +116,7 @@ def process_invoice_pdf(file_data):
                     upsert=True
                 )
 
-            return {"success": True, "items_processed": len(final_data)}
+            return {"success": True, "items_processed": len(final_data), "items": final_data}
 
         except Exception as e:
             return {"error": f"Data processing error: {str(e)}"}
