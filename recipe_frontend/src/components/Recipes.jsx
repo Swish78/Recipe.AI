@@ -21,20 +21,16 @@ import {
     Collapse,
     TextField,
     InputAdornment,
-    Paper,
-    Tab,
-    Tabs
 } from '@mui/material';
 import {
-    Favorite as FavoriteIcon,
-    FavoriteBorder as FavoriteBorderIcon,
     ExpandMore as ExpandMoreIcon,
     ExpandLess as ExpandLessIcon,
     Search as SearchIcon,
     Clear as ClearIcon,
     AddCircle as AddCircleIcon,
     AccessTime as AccessTimeIcon,
-    Restaurant as RestaurantIcon
+    Restaurant as RestaurantIcon,
+    Delete as DeleteIcon
 } from '@mui/icons-material';
 import axios from 'axios';
 
@@ -45,8 +41,8 @@ const Recipes = ({ showNotification, setLoading }) => {
     const [selectedRecipe, setSelectedRecipe] = useState(null);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [generateDialogOpen, setGenerateDialogOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [recipeType, setRecipeType] = useState(1);
-    const [tabValue, setTabValue] = useState(0);
 
     const API_URL = 'http://localhost:8000/api';
 
@@ -74,28 +70,33 @@ const Recipes = ({ showNotification, setLoading }) => {
         });
     };
 
-    const toggleFavorite = async (recipe) => {
-        setLoading(true);
-        try {
-            const updatedRecipe = {
-                ...recipe,
-                is_fav: !recipe.is_fav
-            };
 
-            await axios.post(`${API_URL}/save-recipe`, updatedRecipe);
-            fetchRecipes();
-            showNotification(`Recipe ${updatedRecipe.is_fav ? 'added to' : 'removed from'} favorites`, 'success');
-        } catch (error) {
-            console.error('Error updating favorite status:', error);
-            showNotification('Failed to update favorite status', 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleViewRecipeDetails = (recipe) => {
         setSelectedRecipe(recipe);
         setDialogOpen(true);
+    };
+
+    const handleDeleteRecipe = async () => {
+        if (!selectedRecipe) return;
+
+        setLoading(true);
+        try {
+            const response = await axios.delete(`${API_URL}/delete-recipe/${selectedRecipe._id}`);
+            if (response.data.success) {
+                showNotification('Recipe deleted successfully', 'success');
+                fetchRecipes();
+            } else {
+                showNotification('Failed to delete recipe', 'error');
+            }
+        } catch (error) {
+            console.error('Error deleting recipe:', error);
+            showNotification('Failed to delete recipe', 'error');
+        } finally {
+            setLoading(false);
+            setDeleteDialogOpen(false);
+            setSelectedRecipe(null);
+        }
     };
 
     const handleGenerateRecipe = async () => {
@@ -118,20 +119,11 @@ const Recipes = ({ showNotification, setLoading }) => {
         }
     };
 
-    const handleTabChange = (event, newValue) => {
-        setTabValue(newValue);
-    };
-
     const filteredRecipes = recipes.filter(recipe =>
-        recipe.name.toLowerCase().includes(searchText.toLowerCase())
+        recipe && recipe.name && recipe.name.toLowerCase().includes(searchText.toLowerCase())
     );
 
-    // Filter recipes based on the selected tab
-    const displayedRecipes = tabValue === 0
-        ? filteredRecipes
-        : tabValue === 1
-            ? filteredRecipes.filter(recipe => recipe.is_fav)
-            : filteredRecipes.filter(recipe => !recipe.is_fav);
+    const displayedRecipes = filteredRecipes;
 
     return (
         <Box>
@@ -169,19 +161,7 @@ const Recipes = ({ showNotification, setLoading }) => {
                 />
             </Box>
 
-            <Paper sx={{ mb: 3 }}>
-                <Tabs
-                    value={tabValue}
-                    onChange={handleTabChange}
-                    indicatorColor="primary"
-                    textColor="primary"
-                    centered
-                >
-                    <Tab label="All Recipes" />
-                    <Tab label="Favorites" />
-                    <Tab label="Regular" />
-                </Tabs>
-            </Paper>
+
 
             {displayedRecipes.length > 0 ? (
                 <Grid container spacing={3}>
@@ -190,28 +170,21 @@ const Recipes = ({ showNotification, setLoading }) => {
                             <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                                 <CardHeader
                                     title={recipe.name}
-                                    action={
-                                        <IconButton onClick={() => toggleFavorite(recipe)}>
-                                            {recipe.is_fav ?
-                                                <FavoriteIcon color="error" /> :
-                                                <FavoriteBorderIcon />
-                                            }
-                                        </IconButton>
-                                    }
+
                                 />
                                 <CardContent sx={{ flexGrow: 1 }}>
-                                    <Typography variant="body2" color="text.secondary" mb={2}>
+                                    {/* <Typography variant="body2" color="text.secondary" mb={2}>
                                         {recipe.description?.length > 100
                                             ? `${recipe.description.substring(0, 100)}...`
                                             : recipe.description || "No description available"}
-                                    </Typography>
+                                    </Typography> */}
 
-                                    <Box mb={2} display="flex" alignItems="center">
+                                    {/* <Box mb={2} display="flex" alignItems="center">
                                         <AccessTimeIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
                                         <Typography variant="body2" color="text.secondary">
                                             {recipe.cooking_time ? `${recipe.cooking_time} mins` : "Time not specified"}
                                         </Typography>
-                                    </Box>
+                                    </Box> */}
 
                                     <Box display="flex" flexWrap="wrap" gap={1} mb={2}>
                                         {recipe.tags?.map((tag, index) => (
@@ -229,19 +202,29 @@ const Recipes = ({ showNotification, setLoading }) => {
                                         Ingredients Preview:
                                     </Typography>
                                     <Box>
-                                        {recipe.ingredients?.slice(0, 3).map((ingredient, index) => (
+                                        {recipe.items?.slice(0, 3).map((ingredient, index) => (
                                             <Typography key={index} variant="body2" color="text.secondary">
                                                 • {ingredient}
                                             </Typography>
                                         ))}
-                                        {recipe.ingredients?.length > 3 && (
+                                        {recipe.items?.length > 3 && (
                                             <Typography variant="body2" color="text.secondary">
-                                                ... and {recipe.ingredients.length - 3} more
+                                                ... and {recipe.items.length - 3} more
                                             </Typography>
                                         )}
                                     </Box>
                                 </CardContent>
                                 <CardActions sx={{ justifyContent: 'space-between', pt: 0 }}>
+                                    <IconButton
+                                        size="small"
+                                        color="error"
+                                        onClick={() => {
+                                            setSelectedRecipe(recipe);
+                                            setDeleteDialogOpen(true);
+                                        }}
+                                    >
+                                        <DeleteIcon />
+                                    </IconButton>
                                     <Button
                                         size="small"
                                         onClick={() => toggleExpand(recipe._id)}
@@ -310,30 +293,22 @@ const Recipes = ({ showNotification, setLoading }) => {
                 {selectedRecipe && (
                     <>
                         <DialogTitle>
-                            <Box display="flex" justifyContent="space-between" alignItems="center">
-                                {selectedRecipe.name}
-                                <IconButton onClick={() => toggleFavorite(selectedRecipe)}>
-                                    {selectedRecipe.is_fav ?
-                                        <FavoriteIcon color="error" /> :
-                                        <FavoriteBorderIcon />
-                                    }
-                                </IconButton>
-                            </Box>
+                            {selectedRecipe.name}
                         </DialogTitle>
                         <DialogContent dividers>
-                            <Typography variant="subtitle1" gutterBottom>
+                            {/* <Typography variant="subtitle1" gutterBottom>
                                 Description:
-                            </Typography>
-                            <Typography variant="body2" paragraph>
+                            </Typography> */}
+                            {/* <Typography variant="body2" paragraph>
                                 {selectedRecipe.description || "No description available"}
-                            </Typography>
+                            </Typography> */}
 
                             <Box mb={3} display="flex" alignItems="center" gap={2}>
-                                <Chip
+                                {/* <Chip
                                     icon={<AccessTimeIcon />}
                                     label={`${selectedRecipe.cooking_time || 'N/A'} mins`}
                                     variant="outlined"
-                                />
+                                /> */}
                                 <Box display="flex" flexWrap="wrap" gap={1}>
                                     {selectedRecipe.tags?.map((tag, index) => (
                                         <Chip key={index} label={tag} size="small" color="primary" />
@@ -345,7 +320,7 @@ const Recipes = ({ showNotification, setLoading }) => {
                                 Ingredients:
                             </Typography>
                             <List dense>
-                                {selectedRecipe.ingredients?.map((ingredient, index) => (
+                                {selectedRecipe.items?.map((ingredient, index) => (
                                     <ListItem key={index}>
                                         <ListItemText primary={ingredient} />
                                     </ListItem>
@@ -434,6 +409,40 @@ const Recipes = ({ showNotification, setLoading }) => {
                 <DialogActions>
                     <Button onClick={() => setGenerateDialogOpen(false)}>Cancel</Button>
                     <Button variant="contained" onClick={handleGenerateRecipe}>Generate</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={() => {
+                    setDeleteDialogOpen(false);
+                    setSelectedRecipe(null);
+                }}
+            >
+                <DialogTitle>Delete Recipe</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to delete {selectedRecipe?.name}?
+                        This action cannot be undone.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button
+                        onClick={() => {
+                            setDeleteDialogOpen(false);
+                            setSelectedRecipe(null);
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleDeleteRecipe}
+                        color="error"
+                        variant="contained"
+                    >
+                        Delete
+                    </Button>
                 </DialogActions>
             </Dialog>
         </Box>
