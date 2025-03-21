@@ -8,7 +8,6 @@ import {
     Button,
     List,
     ListItem,
-    ListItemText,
     Divider,
     Paper,
     Alert,
@@ -216,7 +215,7 @@ const UploadInvoice = ({ showNotification, setLoading }) => {
                                     <Paper variant="outlined" sx={{ maxHeight: 350, overflow: 'auto', mb: 3 }}>
                                         <List dense>
                                             {extractedItems.map((item, index) => (
-                                                <ListItem key={index}>
+                                                <ListItem key={index} divider={index < extractedItems.length - 1}>
                                                     <FormControlLabel
                                                         control={
                                                             <Checkbox
@@ -226,11 +225,14 @@ const UploadInvoice = ({ showNotification, setLoading }) => {
                                                             />
                                                         }
                                                         label={
-                                                            <ListItemText
-                                                                primary={item.name}
-                                                                secondary={`Quantity: ${item.quantity || 1} • Category: ${item.category || 'Unknown'}`}
-                                                            />
+                                                            <Box>
+                                                                <Typography variant="subtitle1">{item.name}</Typography>
+                                                                <Typography variant="body2" color="text.secondary">
+                                                                    Quantity: {item.quantity || 1}
+                                                                </Typography>
+                                                            </Box>
                                                         }
+                                                        sx={{ width: '100%', margin: 0 }}
                                                     />
                                                 </ListItem>
                                             ))}
