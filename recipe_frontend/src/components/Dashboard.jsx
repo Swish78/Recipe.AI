@@ -30,8 +30,7 @@ const Dashboard = ({ showNotification, setLoading }) => {
         totalIngredients: 0,
         vegetableCount: 0,
         otherCount: 0,
-        recipeCount: 0,
-        favoriteCount: 0
+        recipeCount: 0
     });
 
     const API_URL = 'http://localhost:8000/api';
@@ -58,14 +57,12 @@ const Dashboard = ({ showNotification, setLoading }) => {
             // Calculate stats
             const vegetableCount = ingredientsRes.data.filter(i => i.is_vegetable_or_fruit).length;
             const otherCount = ingredientsRes.data.length - vegetableCount;
-            const favoriteCount = recipesRes.data.filter(r => r.is_fav).length;
 
             setStats({
                 totalIngredients: ingredientsRes.data.length,
                 vegetableCount,
                 otherCount,
-                recipeCount: recipesRes.data.length,
-                favoriteCount
+                recipeCount: recipesRes.data.length
             });
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
@@ -80,10 +77,7 @@ const Dashboard = ({ showNotification, setLoading }) => {
         { name: 'Other Ingredients', value: stats.otherCount },
     ];
 
-    const recipeChartData = [
-        { name: 'Regular Recipes', value: stats.recipeCount - stats.favoriteCount },
-        { name: 'Favorite Recipes', value: stats.favoriteCount },
-    ];
+
 
     const COLORS = ['#00C49F', '#0088FE', '#FFBB28', '#FF8042'];
 
