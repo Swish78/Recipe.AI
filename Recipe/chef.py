@@ -33,7 +33,7 @@ def check_dietary_restrictions():
     cultural_researcher = Agent(
         role="Cultural Food Researcher",
         goal="Identify current festivals and associated dietary restrictions.",
-        backstory="An expert in cultural food practices and dietary restrictions related to global festivals and holidays.",
+        backstory="An expert in cultural food practices and dietary restrictions related to Hindu festivals and holidays. Avoid beef and pork",
         verbose=False,
         llm=llm
     )
@@ -45,7 +45,7 @@ def check_dietary_restrictions():
 
     research_task = Task(
         description=(
-            f"Today is {today}. Based on the following search results, identify any religious or cultural festivals "
+            f"Today is {today}. Based on the following search results, identify any religious or cultural festivals related to hinduism."
             f"occurring today and their associated dietary restrictions:\n{search_content}\n"
             "Focus on restrictions related to vegetarianism, beef, pork, or other significant food restrictions."
         ),
@@ -56,13 +56,13 @@ def check_dietary_restrictions():
     crew = Crew(
         agents=[cultural_researcher],
         tasks=[research_task],
-        verbose=False
+        verbose=False,
     )
 
     result = crew.kickoff()
 
     try:
-        restrictions = result.final_output
+        restrictions = result.raw
         if isinstance(restrictions, str):
             restrictions = json.loads(restrictions)
 
@@ -144,7 +144,7 @@ def create_recipe_crew(recipe_type, ingredients):
         )
 
         format_task = Task(
-            description="Format the recipe into a clear JSON structure with name, is_veg (boolean), items (list of strings), and instructions (list of strings).",
+            description="Format the recipe into a clear JSON structure with name, is_veg (boolean), ingredients (list of strings), and steps (list of strings).",
             expected_output="A formatted recipe in JSON format.",
             agent=recipe_formatter
         )
@@ -180,7 +180,7 @@ def create_recipe_crew(recipe_type, ingredients):
         )
 
         format_task = Task(
-            description="Format the recipe into a clear JSON structure with name, is_veg (boolean), items (list of strings), and instructions (list of strings).",
+            description="Format the recipe into a clear JSON structure with name, is_veg (boolean), ingredients (list of strings), and steps (list of strings).",
             expected_output="A formatted recipe in JSON format.",
             agent=recipe_formatter
         )
@@ -217,7 +217,7 @@ def create_recipe_crew(recipe_type, ingredients):
         )
 
         format_task = Task(
-            description="Format the recipe into a clear JSON structure with name, is_veg (boolean), items (list of strings), and instructions (list of strings).",
+            description="Format the recipe into a clear JSON structure with name, is_veg (boolean), ingredients (list of strings), and steps (list of strings).",
             expected_output="A formatted recipe in JSON format.",
             agent=recipe_formatter
         )
@@ -258,7 +258,13 @@ def get_recipe_suggestions(ingredients):
     result = crew.kickoff()
 
     try:
-        suggestions = result.final_output
+        if hasattr(result, 'raw'):
+            suggestions = result.raw
+        elif hasattr(result, 'json_dict'):
+            suggestions = result.json_dict
+        else:
+            suggestions = str(result)
+            
         if isinstance(suggestions, str):
             suggestions = json.loads(suggestions)
 
