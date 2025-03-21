@@ -19,21 +19,41 @@ def get_recipe():
     try:
         crew = create_recipe_crew(recipe_type, ingredients)
         result = crew.kickoff()
-
-        recipe_data = result.final_output
-
+        if hasattr(result, 'raw'):
+            recipe_data = result.raw
+        elif hasattr(result, 'json_dict'):
+            recipe_data = result.json_dict
+        else:
+            recipe_data = str(result)
         if isinstance(recipe_data, str):
-            recipe_data = json.loads(recipe_data)
+            if "```json" in recipe_data:
+                json_start = recipe_data.find("```json\n") + 8
+                json_end = recipe_data.rfind("```")
+                cleaned_json = recipe_data[json_start:json_end].strip()
+                try:
+                    recipe_data = json.loads(cleaned_json)
+                except json.JSONDecodeError:
+                    return jsonify({"error": f"Could not parse extracted JSON: {cleaned_json}"}), 500
+            else:
+                try:
+                    recipe_data = json.loads(recipe_data)
+                except json.JSONDecodeError:
+                    return jsonify({"error": f"Could not parse as JSON: {recipe_data}"}), 500
+        if not isinstance(recipe_data, dict):
+            return jsonify({"error": f"Unexpected output format: {type(recipe_data)}"}), 500
+        if 'ingredients' in recipe_data and 'items' not in recipe_data:
+            recipe_data['items'] = recipe_data.pop('ingredients')
+            
+        if 'steps' in recipe_data and 'instructions' not in recipe_data:
+            recipe_data['instructions'] = recipe_data.pop('steps')
 
         recipe_data["is_recipe"] = True
         recipe_data["is_fav"] = False
-
-        recipes_collection.insert_one(recipe_data)
-
+        insert_result = recipes_collection.insert_one(recipe_data)
+        recipe_data["_id"] = str(insert_result.inserted_id)
         return jsonify(recipe_data)
     except Exception as e:
         return jsonify({"error": f"Error processing recipe: {str(e)}"}), 500
-
 
 @recipe_bp.route('/save-recipe', methods=['POST'])
 def save_recipe():
@@ -50,8 +70,15 @@ def save_recipe():
 
 @recipe_bp.route('/get-recipes', methods=['GET'])
 def get_recipes():
-    recipes = list(recipes_collection.find())
-    return jsonify(recipes)
+    try:
+        recipes = list(recipes_collection.find())
+        for recipe in recipes:
+            if '_id' in recipe:
+                recipe['_id'] = str(recipe['_id'])
+        
+        return jsonify(recipes)
+    except Exception as e:
+        return jsonify({"error": f"Error retrieving recipes: {str(e)}"}), 500
 
 
 @recipe_bp.route('/get-recipe-suggestions', methods=['GET'])
@@ -62,3 +89,15 @@ def get_recipe_suggestions_route():
         return jsonify(suggestions)
     except Exception as e:
         return jsonify({"error": f"Error generating suggestions: {str(e)}"}), 500
+
+
+@recipe_bp.route('/delete-recipe/<recipe_id>', methods=['DELETE'])
+def delete_recipe(recipe_id):
+    try:
+        from bson import ObjectId
+        result = recipes_collection.delete_one({"_id": ObjectId(recipe_id)})
+        if result.deleted_count == 0:
+            return jsonify({"error": "Recipe not found"}), 404
+        return jsonify({"success": True, "message": "Recipe deleted successfully"})
+    except Exception as e:
+        return jsonify({"error": f"Error deleting recipe: {str(e)}"}), 500
