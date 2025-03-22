@@ -2,6 +2,8 @@
 
 > Never wonder "What's for dinner?" again! Recipe.AI helps manage your kitchen inventory and suggests delicious meals based on what you have.
 
+DEMO: [Video Link](https://s3.us-east-1.amazonaws.com/recipe.ai/Screen+Recording+2025-03-22+at+14.22.14.mov)
+
 ## ✨ Features
 
 ### 🥗 Smart Inventory Management
