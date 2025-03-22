@@ -3,12 +3,12 @@ import json
 from datetime import datetime
 import requests
 from database import ingredients_collection, recipes_collection
-from config import GROQ_API_KEY, TAVILY_API_KEY, DEFAULT_LLM_MODEL, TAVILY_SEARCH_DEPTH, TAVILY_INCLUDE_DOMAINS, \
+from config import GROQ_API_KEY, TAVILY_API_KEY, DEFAULT_LLM_MODEL, LLAMA_MODEL TAVILY_SEARCH_DEPTH, TAVILY_INCLUDE_DOMAINS, \
     TAVILY_MAX_RESULTS
 
 
 def get_llm():
-    return LLM(model=DEFAULT_LLM_MODEL, api_key=GROQ_API_KEY)
+    return LLM(model=LLAMA_MODEL, api_key=GROQ_API_KEY)
 
 
 def tavily_search(query):
