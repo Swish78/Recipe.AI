@@ -1,0 +1,210 @@
+{
+	"info": {
+		"_postman_id": "4cfaa683-e4cb-4796-837b-2bdd0c653e86",
+		"name": "Recipe",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25931068"
+	},
+	"item": [
+		{
+			"name": "Home",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "Invoice-upload",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/Users/swayampatil/Desktop/invoices/C4D35MCML18749invoice.pdf"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/upload-invoice",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"upload-invoice"
+					],
+					"query": [
+						{
+							"key": "form-data",
+							"value": null,
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "add-ingredient",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Apple\",\n  \"quantity\": 5,\n  \"is_vegetable_or_fruit\": true\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/add-ingredient",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"add-ingredient"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get-ingredients",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/get-ingredients",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"get-ingredients"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get-expiring-ingredients",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/get-expiring-ingredients",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"get-expiring-ingredients"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get-recipe",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"type\": 1\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/get-recipe",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"get-recipe"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "save-recipe",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"is_recipe\": true,\n  \"name\": \"Test Recipe\",\n  \"is_veg\": true,\n  \"is_fav\": false,\n  \"items\": [\"ingredient 1\", \"ingredient 2\", \"ingredient 3\"],\n  \"instructions\": [\"Step 1: Do this\", \"Step 2: Do that\", \"Step 3: Finish\"]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/save-recipe",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"save-recipe"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get-recipes",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/get-recipes",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"get-recipes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get-recipe-suggestions",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	]
+}
